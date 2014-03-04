@@ -2,6 +2,7 @@ Fiber = require('fibers')
 webdriver = require('selenium-webdriver')
 _ = require('lodash')
 
+
 run = (f) ->
   fiber = Fiber(() =>
     next = (x) => fiber.run(x)
