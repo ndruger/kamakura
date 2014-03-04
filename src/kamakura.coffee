@@ -1,7 +1,7 @@
-Fiber = require('fibers')
-webdriver = require('selenium-webdriver')
-_ = require('lodash')
-
+"use strict"
+Fiber = require("fibers")
+webdriver = require("selenium-webdriver")
+_ = require("lodash")
 
 run = (f) ->
   fiber = Fiber(() =>
@@ -16,6 +16,14 @@ class Kamakura
     this._driver = new webdriver.Builder().
       withCapabilities(webdriver.Capabilities.chrome()).
       build()
+    this._okProc = (opt_params && opt_params.ok)
+  destroy: ->
+    this._driver.quit()
+  ok: (result, msg) ->
+    if this._okProc
+      this._okProc(result, msg)
+    console.log("result = #{result}: #{msg}")
+    result
   goto: (url) ->
     this._driver.get(url)
   run: (f) ->
@@ -37,8 +45,6 @@ class Kamakura
     one()
     
     Fiber.yield()
-  destroy: ->
-    this._driver.quit()
 
 Kamakura.Capabilities = webdriver.Capabilities
 
@@ -48,6 +54,8 @@ class KamakuraElement
     # webdriver.WebElement
     this._orig = webdriverElement
     this._km = km
+  ok: (result, msg) ->
+    this._km.ok(result, msg)
   getText: (opt_next) ->
     next = opt_next || this._km.next
   
@@ -57,21 +65,24 @@ class KamakuraElement
     Fiber.yield()
   shouldHaveText: (text, opt_next) ->
     next = opt_next || this._km.next
-    console.log('shouldHaveText')
 
     one = () =>
       run((aNext) =>
         t = this.getText(aNext)
-        console.log(t, text)
         if t != text
           one()
           return
-        next(true))
+        next(this.ok(true, "shouldHaveText: #{text}")))
     one()
     
     Fiber.yield()
 
-_.each(['click'], (name) ->
+_.each([
+  "click",
+  "sendKeys",
+  "submit",
+  "clear",
+], (name) ->
   KamakuraElement.prototype[name] = (args) ->
     this._orig[name].apply(this._orig, arguments)
 )
