@@ -5,7 +5,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node test/test.js",
+    "build": "coffee --bare --compile --output lib src/*.coffee",
+    "prepublish": "coffee --bare --compile --output lib src/*.coffee"
   },
   "author": "",
   "license": "MIT",
@@ -13,5 +15,10 @@
     "lodash": "~2.4.1",
     "fibers": "~1.0.1",
     "selenium-webdriver": "~2.40.0"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.2",
+    "grunt-contrib-coffee": "~0.10.1",
+    "coffee-script": "~1.7.1"
   }
 }
