@@ -28,9 +28,13 @@ class Kamakura
   find: (css, opt_next) ->
     next = opt_next || this.next
     
-    this._driver.findElement(webdriver.By.css(css)).then((el) =>
-      next(new KamakuraElement(el, this))
-    )
+    one = () => 
+      this._driver.findElement(webdriver.By.css(css)).then((el) =>
+        next(new KamakuraElement(el, this))
+      , (e) =>
+        one()
+      )
+    one()
     
     Fiber.yield()
   destroy: ->
@@ -54,16 +58,16 @@ class KamakuraElement
   shouldHaveText: (text, opt_next) ->
     next = opt_next || this._km.next
     console.log('shouldHaveText')
-    
-    timer = setInterval(=>
+
+    one = () =>
       run((aNext) =>
         t = this.getText(aNext)
         console.log(t, text)
         if t != text
+          one()
           return
-        clearInterval(timer)
         next(true))
-    , KamakuraElement.interval)
+    one()
     
     Fiber.yield()
 

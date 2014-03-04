@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <button>Push</button>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <script>
+      document.write('<script src="' + location.origin + '/vendor/q.js"><' + '/script>');
+    </script>
+    <script>
+    (function() {
+    
+      $(document).ready(function() {
+      console.log('neko');
+        var DELAY = 100;
+
+        $('button').on('click', function() {
+          Q.delay(DELAY).then(function createResultElement() {
+            $(document.body).append($('<div>').attr({
+              'class': 'result',
+            }));
+            return Q.delay(DELAY);
+            
+          }).then(function setResultText() {
+            $('.result').text('pushed');
+            return Q.delay(DELAY);
+
+          });
+        });
+      });
+      
+    })();
+    </script>
+  </body>
+</html>
