@@ -14,6 +14,7 @@ address = require("./server")()
 # shouldBeDisplayed: isDisplayed()
 
 # shouldBeCount: count.equals()
+# TODO: create test sample of todo mvc 
 
 assert = require("chai").assert
 
@@ -22,10 +23,10 @@ km = kamakura.create({
 })
 
 describe("Kaminari", ->
-  this.timeout(5000)
+  this.timeout(10000)
 
   describe("find()", ->
-    it('should wait and find element', (done) ->
+    it('should wait and find result element', (done) ->
       km.run((next) =>
         km.goto("http://#{address.address}:#{address.port}?js=find.js")
         km.find("button").click()
@@ -35,12 +36,13 @@ describe("Kaminari", ->
     )
   )
   
-  describe("shouldHaveText()", ->
+  describe("containsText()", ->
     it('should wait result', (done) ->
       km.run((next) =>
-        km.goto("http://#{address.address}:#{address.port}?js=shouldHaveText.js")
+        km.goto("http://#{address.address}:#{address.port}?js=containsText.js")
         km.find("button").click()
-        km.find(".result").shouldHaveText("pushed")
+        km.find(".result").containsText("pushed")
+        km.find(".result").text.contains("pushed")
         done()
       )
     )

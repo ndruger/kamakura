@@ -5,7 +5,7 @@ $(document).ready(->
     Q.delay(DELAY).then(->
       $(document.body).append($('<div>').attr(
         'class': 'result'
-      ))
+      ).text('result'))
     )
   )
 )
