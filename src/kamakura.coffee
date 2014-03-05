@@ -10,6 +10,27 @@ run = (f) ->
   )
   fiber.run()
 
+setChain = (cls, methods) ->
+  cls_chainMethods = methods
+  _.each(methods, (method) ->
+    _.each(method.names, (name) ->
+      f = ->
+        @_chain.push(name)
+        found = _.find(cls._chainMethods, (m) =>
+          _.all(m.names, (n, i) =>
+            @_chain[@_chain.length - (m.names.length - i)] == n
+          )
+        )
+        if found
+          return this[found.method].apply(this, arguments)
+        this
+      if name == method.names[method.names.length - 1]
+        cls.prototype[name] = f
+      else
+        cls.prototype.__defineGetter__(name, f)
+    )
+  )
+
 class Kamakura
   constructor: (opt_params) ->
     Capabilities = (opt_params && opt_params.capabilities) || Kamakura.Capabilities.chrome()
@@ -71,7 +92,7 @@ class KamakuraElement
     one = () =>
       run((aNext) =>
         t = @getText(aNext)
-        console.log(t)
+#        console.log(t)
         if !expected.match(t)
           one()
           return
@@ -90,29 +111,10 @@ _.each([
     @_orig[name].apply(@_orig, arguments)
 )
 
-KamakuraElement._chainMethods = [{
+setChain(KamakuraElement, [{
   names: ['text', 'contains']
   method: 'containsText'
-}]
-
-_.each(KamakuraElement._chainMethods, (method) ->
-  _.each(method.names, (name) ->
-    f = ->
-      @_chain.push(name)
-      found = _.find(KamakuraElement._chainMethods, (m) =>
-        _.all(m.names, (n, i) =>
-          @_chain[@_chain.length - (m.names.length - i)] == n
-        )
-      )
-      if found
-        return this[found.method].apply(this, arguments)
-      this
-    if name == method.names[method.names.length - 1]
-      KamakuraElement.prototype[name] = f
-    else
-      KamakuraElement.prototype.__defineGetter__(name, f)
-  )
-)
+}])
 
 module.exports = {
   create: (params) ->

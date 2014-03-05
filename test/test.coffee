@@ -15,6 +15,8 @@ address = require("./server")()
 
 # shouldBeCount: count.equals()
 # TODO: create test sample of todo mvc 
+# TODO: error case
+# TODO: .dont.
 
 assert = require("chai").assert
 
@@ -42,7 +44,7 @@ describe("Kaminari", ->
         km.goto("http://#{address.address}:#{address.port}?js=containsText.js")
         km.find("button").click()
         km.find(".result").containsText("pushed")
-        km.find(".result").text.contains("pushed")
+        km.find(".result").text.contains("push")
         done()
       )
     )
