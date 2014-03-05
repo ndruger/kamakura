@@ -2,22 +2,6 @@
 kamakura = require("../lib/kamakura")
 address = require("./server")()
 
-# shouldHaveText: text.contains()
-# shouldHaveValue: val.contains()
-# shouldHaveHtml: html.contains()
-
-# shouldHaveCss: css.has()
-# shouldHaveAttribute: attr.has()
-
-# shouldBeEnabled: isEnabled()
-# shouldBeSelected: isSelected()
-# shouldBeDisplayed: isDisplayed()
-
-# shouldBeCount: count.equals()
-# TODO: create test sample of todo mvc 
-# TODO: error case
-# TODO: .dont.
-
 assert = require("chai").assert
 
 km = kamakura.create({
@@ -32,7 +16,7 @@ describe("Kaminari", ->
       km.run((next) =>
         km.goto("http://#{address.address}:#{address.port}?js=find.js")
         km.find("button").click()
-        assert.ok(km.find(".result"))
+        assert.ok(km.find(".result_text"))
         done()
       )
     )
@@ -43,8 +27,30 @@ describe("Kaminari", ->
       km.run((next) =>
         km.goto("http://#{address.address}:#{address.port}?js=containsText.js")
         km.find("button").click()
-        km.find(".result").containsText("pushed")
-        km.find(".result").text.contains("push")
+        km.find(".result_text").containsText("pushed")
+        km.find(".result_text").text.contains("push")
+        done()
+      )
+    )
+  )
+
+  describe("isEnabled()", ->
+    it('should wait result', (done) ->
+      km.run((next) =>
+        km.goto("http://#{address.address}:#{address.port}?js=isEnabled.js")
+        km.find("button").click()
+        km.find(".result_button").isEnabled()
+        done()
+      )
+    )
+  )
+
+  describe("isSelected()", ->
+    it('should wait result', (done) ->
+      km.run((next) =>
+        km.goto("http://#{address.address}:#{address.port}?js=isSelected.js")
+        km.find("button").click()
+        km.find(".result_option").isSelected()
         done()
       )
     )

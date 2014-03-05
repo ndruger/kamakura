@@ -4,7 +4,7 @@ $(document).ready(->
   $('button').on('click', ->
     Q.delay(DELAY).then(->
       $(document.body).append($('<div>').attr(
-        'class': 'result'
+        'class': 'result_text'
       ).text('result'))
     )
   )

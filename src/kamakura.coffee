@@ -10,7 +10,9 @@ run = (f) ->
   )
   fiber.run()
 
-setChain = (cls, methods) ->
+LOG = console.log.bind(console);
+
+setChainMethod = (cls, methods) ->
   cls_chainMethods = methods
   _.each(methods, (method) ->
     _.each(method.names, (name) ->
@@ -59,8 +61,10 @@ class Kamakura
     
     one = () => 
       @_driver.findElement(webdriver.By.css(css)).then((el) =>
+#        LOG("Find: Found: #{css}: ", el);
         next(new KamakuraElement(el, @))
       , (e) =>
+#        LOG("Find: Not Found: #{css}");
         one()
       )
     one()
@@ -100,6 +104,25 @@ class KamakuraElement
     one()
     
     Fiber.yield()
+  isX: (name, opt_next) ->
+    next = opt_next || @_km.next
+    one = () => 
+      @_orig[name]().then((result) => 
+        #LOG("#{name}: result: ", result)
+        if !result
+          one()
+          return
+        next((@ok(result, "#{name}: #{result}")))
+      , (e) =>
+        console.log(name, 'e', e)
+        one()
+      )
+    one()
+    Fiber.yield()
+  isEnabled: (opt_next) ->
+    @isX('isEnabled', opt_next)
+  isSelected: (opt_next) ->
+    @isX('isSelected', opt_next)
 
 _.each([
   "click",
@@ -111,7 +134,7 @@ _.each([
     @_orig[name].apply(@_orig, arguments)
 )
 
-setChain(KamakuraElement, [{
+setChainMethod(KamakuraElement, [{
   names: ['text', 'contains']
   method: 'containsText'
 }])
