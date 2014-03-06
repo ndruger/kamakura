@@ -3,14 +3,14 @@ Fiber = require("fibers")
 webdriver = require("selenium-webdriver")
 _ = require("lodash")
 
+LOG = console.log.bind(console);
+
 run = (f) ->
   fiber = Fiber(() =>
     next = (x) => fiber.run(x)
     f(next)
   )
   fiber.run()
-
-LOG = console.log.bind(console);
 
 setChainMethod = (cls, methods) ->
   cls_chainMethods = methods
@@ -40,6 +40,7 @@ class Kamakura
       withCapabilities(webdriver.Capabilities.chrome()).
       build()
     @_okProc = (opt_params && opt_params.ok)
+    @timeout = 3000
   destroy: ->
     @_driver.quit()
   ok: (result, msg) ->
@@ -68,8 +69,8 @@ class Kamakura
         one()
       )
     one()
-    
     Fiber.yield()
+  setTimeout: (@timeout) ->
 
 Kamakura.Capabilities = webdriver.Capabilities
 
