@@ -142,6 +142,42 @@ class KamakuraElement
     @isX('isEnabled', opt_next)
   isSelected: (opt_next) ->
     @isX('isSelected', opt_next)
+  containsHtml: (expected, opt_next) ->
+    next = opt_next || @_km.next
+    @startTimer()
+    one = () => 
+      @_orig.getInnerHtml().then((html) => 
+        #LOG("#{name}: result: ", result)
+        if @isTimeout()
+          throw TimeoutError("timeout on containsHtml")
+        if !expected.match(html)
+          one()
+          return
+        next((@ok(true, "containsHtml: #{html}")))
+      , (e) =>
+        console.log(name, 'e', e)
+        one()
+      )
+    one()
+    Fiber.yield()
+  hasCss: (css, expected, opt_next) ->
+    next = opt_next || @_km.next
+    @startTimer()
+    one = () => 
+      @_orig.getCssValue(css).then((value) => 
+        #LOG("#{name}: result: ", result)
+        if @isTimeout()
+          throw TimeoutError("timeout on containsHtml")
+        if !(value == expected)
+          one()
+          return
+        next((@ok(true, "hasCss: #{value}")))
+      , (e) =>
+        console.log('hasCss', 'e', e)
+        one()
+      )
+    one()
+    Fiber.yield()
 
 _.each([
   "startTimer",
@@ -164,6 +200,12 @@ _.each([
 setChainMethod(KamakuraElement, [{
   names: ['text', 'contains']
   method: 'containsText'
+},{
+  names: ['html', 'contains']
+  method: 'containsHtml'
+},{
+  names: ['css', 'has']
+  method: 'hasCss'
 }])
 
 module.exports = {

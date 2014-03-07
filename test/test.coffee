@@ -10,7 +10,7 @@ km = kamakura.create({
 
 describe("Kaminari", ->
   this.timeout(10000)
-  km.setTimeoutVal(0)
+  km.setTimeoutVal(3000)
 
   describe("find()", ->
     it('should wait and find result element', (done) ->
@@ -52,6 +52,30 @@ describe("Kaminari", ->
         km.goto("http://#{address.address}:#{address.port}?js=isSelected.js")
         km.find("button").click()
         km.find(".result_option").isSelected()
+        done()
+      )
+    )
+  )
+
+  describe("hasHtml()", ->
+    it('should wait result', (done) ->
+      km.run((next) =>
+        km.goto("http://#{address.address}:#{address.port}?js=containsHtml.js")
+        km.find("button").click()
+        km.find(".result_text").containsHtml("pushed")
+        km.find(".result_text").html.contains("pushed")
+        done()
+      )
+    )
+  )
+
+  describe("hasCss()", ->
+    it('should wait result', (done) ->
+      km.run((next) =>
+        km.goto("http://#{address.address}:#{address.port}?js=hasCss.js")
+        km.find("button").click()
+        km.find(".result_text").hasCss("display", "inline-block")
+        km.find(".result_text").css.has("display", "inline-block")
         done()
       )
     )
