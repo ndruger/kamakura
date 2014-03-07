@@ -5,11 +5,12 @@ address = require("./server")()
 assert = require("chai").assert
 
 km = kamakura.create({
-  ok: assert.ok
+  okProc: assert.ok
 })
 
 describe("Kaminari", ->
   this.timeout(10000)
+  km.setTimeoutVal(0)
 
   describe("find()", ->
     it('should wait and find result element', (done) ->

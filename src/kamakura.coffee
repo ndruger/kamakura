@@ -1,4 +1,3 @@
-"use strict"
 Fiber = require("fibers")
 webdriver = require("selenium-webdriver")
 _ = require("lodash")
@@ -12,6 +11,11 @@ run = (f) ->
   )
   fiber.run()
 
+TimeoutError = (msg) ->
+  err = Error.call(this, msg)
+  err.name = "TimeoutError"
+  err
+      
 setChainMethod = (cls, methods) ->
   cls_chainMethods = methods
   _.each(methods, (method) ->
@@ -35,14 +39,18 @@ setChainMethod = (cls, methods) ->
 
 class Kamakura
   constructor: (opt_params) ->
-    Capabilities = (opt_params && opt_params.capabilities) || Kamakura.Capabilities.chrome()
+    capabilities = (opt_params && opt_params.capabilities) || Kamakura.Capabilities.chrome()
     @_driver = new webdriver.Builder().
-      withCapabilities(webdriver.Capabilities.chrome()).
+      withCapabilities(capabilities).
       build()
-    @_okProc = (opt_params && opt_params.ok)
+    @_okProc = (opt_params && opt_params.okProc)
     @timeout = 3000
   destroy: ->
     @_driver.quit()
+  startTimer: ->
+    @startTime = Date.now()
+  isTimeout: ->
+    Date.now() - @startTime > @timeout
   ok: (result, msg) ->
     if @_okProc
       @_okProc(result, msg)
@@ -60,17 +68,20 @@ class Kamakura
   find: (css, opt_next) ->
     next = opt_next || @next
     
+    @startTimer()
     one = () => 
       @_driver.findElement(webdriver.By.css(css)).then((el) =>
 #        LOG("Find: Found: #{css}: ", el);
         next(new KamakuraElement(el, @))
       , (e) =>
+        if @isTimeout()
+          throw TimeoutError('timeout on find')
 #        LOG("Find: Not Found: #{css}");
         one()
       )
     one()
     Fiber.yield()
-  setTimeout: (@timeout) ->
+  setTimeoutVal: (@timeout) ->
 
 Kamakura.Capabilities = webdriver.Capabilities
 
@@ -94,8 +105,11 @@ class KamakuraElement
   containsText: (expected, opt_next) ->
     next = opt_next || @_km.next
 
+    @startTimer()
     one = () =>
       run((aNext) =>
+        if @isTimeout()
+          throw TimeoutError('timeout on #{containsText}')
         t = @getText(aNext)
 #        console.log(t)
         if !expected.match(t)
@@ -107,9 +121,13 @@ class KamakuraElement
     Fiber.yield()
   isX: (name, opt_next) ->
     next = opt_next || @_km.next
+
+    @startTimer()
     one = () => 
       @_orig[name]().then((result) => 
         #LOG("#{name}: result: ", result)
+        if @isTimeout()
+          throw TimeoutError("timeout on #{name}")
         if !result
           one()
           return
@@ -124,6 +142,14 @@ class KamakuraElement
     @isX('isEnabled', opt_next)
   isSelected: (opt_next) ->
     @isX('isSelected', opt_next)
+
+_.each([
+  "startTimer",
+  "isTimeout"
+], (name) ->
+  KamakuraElement.prototype[name] = (args) ->
+    @_km[name].apply(@_km, arguments)
+)
 
 _.each([
   "click",
