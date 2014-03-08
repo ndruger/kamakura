@@ -87,7 +87,7 @@ class Kamakura
       )
     one()
     Fiber.yield()
-  setTimeoutVal: (@timeout) ->
+  setTimeoutValue: (@timeout) ->
 
 Kamakura.Capabilities = webdriver.Capabilities
 
@@ -118,6 +118,8 @@ class KamakuraElement
         current
       next: opt_next
     )
+  shouldBeDisplayed: (opt_next) ->
+    @shouldBeX("shouldBeDisplayed", "isDisplayed", opt_next)
   shouldBeEnabled: (opt_next) ->
     @shouldBeX("shouldBeEnabled", "isEnabled", opt_next)
   shouldBeSelected: (opt_next) ->

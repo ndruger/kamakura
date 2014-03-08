@@ -11,7 +11,7 @@ km = kamakura.create({
 
 describe("Kaminari", ->
   this.timeout(10000)
-  km.setTimeoutVal(3000)
+  km.setTimeoutValue(3000)
 
   describe("find()", ->
     it('should wait and find result element', (done) ->
@@ -53,6 +53,17 @@ describe("Kaminari", ->
         km.goto("#{origin}?js=shouldBeSelected.js")
         km.find("button").click()
         km.find(".result_option").shouldBeSelected()
+        done()
+      )
+    )
+  )
+
+  describe("shouldBeDisplayed()", ->
+    it('should wait result', (done) ->
+      km.run((next) =>
+        km.goto("#{origin}?js=common.js")
+        km.find("button").click()
+        km.find(".result_option").shouldBeDisplayed()
         done()
       )
     )
