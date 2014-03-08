@@ -1,0 +1,3 @@
+[submodule "test/public/todomvc"]
+	path = test/public/todomvc
+	url = https://github.com/tastejs/todomvc.git

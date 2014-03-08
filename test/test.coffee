@@ -87,7 +87,7 @@ describe("Kaminari", ->
         km.goto("http://#{address.address}:#{address.port}?js=hasAttr.js")
         km.find("button").click()
         km.find(".result_text").hasAttr("name", "name_value")
-        km.find(".result_text").neko.has("name", "name_value")
+        km.find(".result_text").attr.has("name", "name_value")
         done()
       )
     )

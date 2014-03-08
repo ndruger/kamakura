@@ -191,7 +191,7 @@ setChainMethod(KamakuraElement, [{
   names: ['css', 'has']
   method: 'hasCss'
 },{
-  names: ['neko', 'has']
+  names: ['attr', 'has']
   method: 'hasAttr'
 }])
 
