@@ -8,5 +8,4 @@ server.configure( ->
 
 module.exports = () ->
   server.listen().address()
-  
 

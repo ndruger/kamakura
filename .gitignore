@@ -1,5 +1,6 @@
 node_modules/
 lib/*.js
 
-test/**/*.js
+test/*.js
+test/public/*.js
 

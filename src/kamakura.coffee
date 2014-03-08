@@ -78,8 +78,8 @@ class Kamakura
         next(new KamakuraElement(el, @))
       , (e) =>
         if @isTimeout()
-          throw TimeoutError('timeout on find')
-#        LOG("Find: Not Found: #{css}");
+          LOG("Find: Not Found: #{css}");
+          throw TimeoutError('timeout on find: #{css}')
         one()
       )
     one()
