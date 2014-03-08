@@ -3,4 +3,5 @@ lib/*.js
 
 test/*.js
 test/public/*.js
+test/public/js/*.js
 
