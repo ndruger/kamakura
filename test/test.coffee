@@ -1,6 +1,7 @@
 "use strict"
 kamakura = require("../lib/kamakura")
 address = require("./server")()
+origin = "http://#{address.address}:#{address.port}"
 
 assert = require("chai").assert
 
@@ -15,7 +16,7 @@ describe("Kaminari", ->
   describe("find()", ->
     it('should wait and find result element', (done) ->
       km.run((next) =>
-        km.goto("http://#{address.address}:#{address.port}?js=common.js")
+        km.goto("#{origin}?js=common.js")
         km.find("button").click()
         assert.ok(km.find(".result_text"))
         done()
@@ -23,71 +24,71 @@ describe("Kaminari", ->
     )
   )
   
-  describe("containsText()", ->
+  describe("shouldContainText()", ->
     it('should wait result', (done) ->
       km.run((next) =>
-        km.goto("http://#{address.address}:#{address.port}?js=common.js")
+        km.goto("#{origin}?js=common.js")
         km.find("button").click()
-        km.find(".result_text").containsText("pushed")
-        km.find(".result_text").text.contains("push")
+        km.find(".result_text").shouldContainText("pushed")
+        km.find(".result_text").text.should.contain("push")
         done()
       )
     )
   )
 
-  describe("isEnabled()", ->
+  describe("shouldBeEnabled()", ->
     it('should wait result', (done) ->
       km.run((next) =>
-        km.goto("http://#{address.address}:#{address.port}?js=isEnabled.js")
+        km.goto("#{origin}?js=shouldBeEnabled.js")
         km.find("button").click()
-        km.find(".result_button").isEnabled()
+        km.find(".result_button").shouldBeEnabled()
         done()
       )
     )
   )
 
-  describe("isSelected()", ->
+  describe("shouldBeSelected()", ->
     it('should wait result', (done) ->
       km.run((next) =>
-        km.goto("http://#{address.address}:#{address.port}?js=isSelected.js")
+        km.goto("#{origin}?js=shouldBeSelected.js")
         km.find("button").click()
-        km.find(".result_option").isSelected()
+        km.find(".result_option").shouldBeSelected()
         done()
       )
     )
   )
 
-  describe("hasHtml()", ->
+  describe("shouldContainHtml()", ->
     it('should wait result', (done) ->
       km.run((next) =>
-        km.goto("http://#{address.address}:#{address.port}?js=common.js")
+        km.goto("#{origin}?js=common.js")
         km.find("button").click()
-        km.find(".result_text").containsHtml("pushed")
-        km.find(".result_text").html.contains("pushed")
+        km.find(".result_text").shouldContainHtml("pushed")
+        km.find(".result_text").html.should.contain("pushed")
         done()
       )
     )
   )
 
-  describe("hasCss()", ->
+  describe("shouldHaveCss()", ->
     it('should wait result', (done) ->
       km.run((next) =>
-        km.goto("http://#{address.address}:#{address.port}?js=common.js")
+        km.goto("#{origin}?js=common.js")
         km.find("button").click()
-        km.find(".result_text").hasCss("display", "inline-block")
-        km.find(".result_text").css.has("display", "inline-block")
+        km.find(".result_text").shouldHaveCss("display", "inline-block")
+        km.find(".result_text").css.should.have("display", "inline-block")
         done()
       )
     )
   )
 
-  describe("hasAttr()", ->
+  describe("shouldHaveAttr()", ->
     it('should wait result', (done) ->
       km.run((next) =>
-        km.goto("http://#{address.address}:#{address.port}?js=common.js")
+        km.goto("#{origin}?js=common.js")
         km.find("button").click()
-        km.find(".result_text").hasAttr("name", "name_value")
-        km.find(".result_text").attr.has("name", "name_value")
+        km.find(".result_text").shouldHaveAttr("name", "name_value")
+        km.find(".result_text").attr.should.have("name", "name_value")
         done()
       )
     )

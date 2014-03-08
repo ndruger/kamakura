@@ -17,13 +17,17 @@ TimeoutError = (msg) ->
   err
       
 setChainMethod = (cls, methods) ->
+  maxLen = _.map(methods, (m) ->
+    m.names.length
+  )
+  
   cls._chainMethods = methods
   _.each(methods, (method) ->
     _.each(method.names, (name) ->
       f = ->
         @_chain.push(name)
-        if @_chain.length == 3
-          throw 'chain matcher fialed'
+        if @_chain.length == maxLen + 1
+          throw "chain matcher failed: maxLen"
         found = _.find(cls._chainMethods, (m) =>
            _.all(m.names, (n, i) =>
             @_chain[@_chain.length - (m.names.length - i)] == n
@@ -57,7 +61,6 @@ class Kamakura
   ok: (result, msg) ->
     if @_okProc
       @_okProc(result, msg)
-    console.log("result = #{result}: #{msg}")
     result
   goto: (url) ->
     @_driver.get(url)
@@ -79,7 +82,7 @@ class Kamakura
       , (e) =>
         if @isTimeout()
           LOG("Find: Not Found: #{css}");
-          throw TimeoutError('timeout on find: #{css}')
+          throw TimeoutError("timeout on find: #{css}")
         one()
       )
     one()
@@ -97,43 +100,43 @@ class KamakuraElement
     @_chain = []
   ok: (result, msg) ->
     @_km.ok(result, msg)
-  containsText: (expected, opt_next) ->
-    @doOrigMethod(
-      name: 'containsText',
+  shouldContainText: (expected, opt_next) ->
+    @_shouldX(
+      name: "shouldContainText",
       proc: =>
         @_orig.getText()
       matchProc: (current) =>
         expected.match(current)
       next: opt_next
     )
-  isX: (name, opt_next) ->
-    @doOrigMethod(
+  shouldBeX: (name, method, opt_next) ->
+    @_shouldX(
       name: name,
       proc: =>
-        @_orig[name]()
+        @_orig[method]()
       matchProc: (current) =>
         current
       next: opt_next
     )
-  isEnabled: (opt_next) ->
-    @isX('isEnabled', opt_next)
-  isSelected: (opt_next) ->
-    @isX('isSelected', opt_next)
-  containsHtml: (expected, opt_next) ->
-    @doOrigMethod(
-      name: 'containsHtml',
+  shouldBeEnabled: (opt_next) ->
+    @shouldBeX("shouldBeEnabled", "isEnabled", opt_next)
+  shouldBeSelected: (opt_next) ->
+    @shouldBeX("shouldBeSelected", "isSelected", opt_next)
+  shouldContainHtml: (expected, opt_next) ->
+    @_shouldX(
+      name: "shouldContainHtml",
       proc: =>
         @_orig.getInnerHtml()
       matchProc: (current) =>
         current.match(expected)
       next: opt_next
     )
-  hasCss: (css, expected, opt_next) ->
-    @hasX('hasCss', 'getCssValue', css, expected, opt_next)
-  hasAttr: (attr, expected, opt_next) ->
-    @hasX('hasAttr', 'getAttribute', attr, expected, opt_next)
-  hasX: (name, method, property, expected, opt_next) ->
-    @doOrigMethod(
+  shouldHaveCss: (css, expected, opt_next) ->
+    @_shouldHaveX("shouldHaveCss", "getCssValue", css, expected, opt_next)
+  shouldHaveAttr: (attr, expected, opt_next) ->
+    @_shouldHaveX("shouldHaveAttr", "getAttribute", attr, expected, opt_next)
+  _shouldHaveX: (name, method, property, expected, opt_next) ->
+    @_shouldX(
       name: name,
       proc: =>
         @_orig[method](property)
@@ -141,14 +144,14 @@ class KamakuraElement
         current == expected
       next: opt_next
     )
-  doOrigMethod: (params) ->
+  _shouldX: (params) ->
     next = params.next || @_km.next
     @startTimer()
     one = () => 
       params.proc().then((current) => 
         #LOG("#{name}: result: ", result)
         if @isTimeout()
-          throw TimeoutError("timeout on #{name}: #{current}")
+          throw TimeoutError("timeout on #{params.name}: #{current}")
         if !params.matchProc(current)
           one()
           return
@@ -156,7 +159,7 @@ class KamakuraElement
       , (e) =>
         if @isTimeout()
           throw TimeoutError("timeout on #{!params.name}")
-        console.log(!params.name, 'e', e)
+#        console.log(!params.name, "e", e)
         one()
       )
     one()
@@ -181,17 +184,17 @@ _.each([
 )
 
 setChainMethod(KamakuraElement, [{
-  names: ['text', 'contains']
-  method: 'containsText'
+  names: ["text", "should", "contain"]
+  method: "shouldContainText"
 },{
-  names: ['html', 'contains']
-  method: 'containsHtml'
+  names: ["html", "should", "contain"]
+  method: "shouldContainHtml"
 },{
-  names: ['css', 'has']
-  method: 'hasCss'
+  names: ["css", "should", "have"]
+  method: "shouldHaveCss"
 },{
-  names: ['attr', 'has']
-  method: 'hasAttr'
+  names: ["attr", "should", "have"]
+  method: "shouldHasAttr"
 }])
 
 module.exports = {
