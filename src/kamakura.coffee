@@ -17,17 +17,20 @@ TimeoutError = (msg) ->
   err
       
 setChainMethod = (cls, methods) ->
-  cls_chainMethods = methods
+  cls._chainMethods = methods
   _.each(methods, (method) ->
     _.each(method.names, (name) ->
       f = ->
         @_chain.push(name)
+        if @_chain.length == 3
+          throw 'chain matcher fialed'
         found = _.find(cls._chainMethods, (m) =>
-          _.all(m.names, (n, i) =>
+           _.all(m.names, (n, i) =>
             @_chain[@_chain.length - (m.names.length - i)] == n
           )
         )
         if found
+          @_chain = []
           return this[found.method].apply(this, arguments)
         this
       if name == method.names[method.names.length - 1]
@@ -95,85 +98,66 @@ class KamakuraElement
     
   ok: (result, msg) ->
     @_km.ok(result, msg)
-  getText: (opt_next) ->
-    next = opt_next || @_km.next
-  
-    @_orig.getText().then((t) => 
-      next(t)
-    )
-    Fiber.yield()
   containsText: (expected, opt_next) ->
-    next = opt_next || @_km.next
-
-    @startTimer()
-    one = () =>
-      run((aNext) =>
-        if @isTimeout()
-          throw TimeoutError('timeout on #{containsText}')
-        t = @getText(aNext)
-#        console.log(t)
-        if !expected.match(t)
-          one()
-          return
-        next(@ok(true, "containsText: #{expected}")))
-    one()
-    
-    Fiber.yield()
+    @doOrigMethod(
+      name: 'containsText',
+      proc: =>
+        @_orig.getText()
+      matchProc: (current) =>
+        expected.match(current)
+      next: opt_next
+    )
   isX: (name, opt_next) ->
-    next = opt_next || @_km.next
-
-    @startTimer()
-    one = () => 
-      @_orig[name]().then((result) => 
-        #LOG("#{name}: result: ", result)
-        if @isTimeout()
-          throw TimeoutError("timeout on #{name}")
-        if !result
-          one()
-          return
-        next((@ok(result, "#{name}: #{result}")))
-      , (e) =>
-        console.log(name, 'e', e)
-        one()
-      )
-    one()
-    Fiber.yield()
+    @doOrigMethod(
+      name: name,
+      proc: =>
+        @_orig[name]()
+      matchProc: (current) =>
+        current
+      next: opt_next
+    )
   isEnabled: (opt_next) ->
     @isX('isEnabled', opt_next)
   isSelected: (opt_next) ->
     @isX('isSelected', opt_next)
   containsHtml: (expected, opt_next) ->
-    next = opt_next || @_km.next
-    @startTimer()
-    one = () => 
-      @_orig.getInnerHtml().then((html) => 
-        #LOG("#{name}: result: ", result)
-        if @isTimeout()
-          throw TimeoutError("timeout on containsHtml")
-        if !expected.match(html)
-          one()
-          return
-        next((@ok(true, "containsHtml: #{html}")))
-      , (e) =>
-        console.log(name, 'e', e)
-        one()
-      )
-    one()
-    Fiber.yield()
+    @doOrigMethod(
+      name: 'containsHtml',
+      proc: =>
+        @_orig.getInnerHtml()
+      matchProc: (current) =>
+        current.match(expected)
+      next: opt_next
+    )
   hasCss: (css, expected, opt_next) ->
-    next = opt_next || @_km.next
+    @hasX('hasCss', 'getCssValue', css, expected, opt_next)
+  hasAttr: (attr, expected, opt_next) ->
+    @hasX('hasAttr', 'getAttribute', attr, expected, opt_next)
+  hasX: (name, method, property, expected, opt_next) ->
+    @doOrigMethod(
+      name: name,
+      proc: =>
+        @_orig[method](property)
+      matchProc: (current) =>
+        current == expected
+      next: opt_next
+    )
+  doOrigMethod: (params) ->
+    next = params.next || @_km.next
     @startTimer()
     one = () => 
-      @_orig.getCssValue(css).then((value) => 
+      params.proc().then((current) => 
         #LOG("#{name}: result: ", result)
         if @isTimeout()
-          throw TimeoutError("timeout on containsHtml")
-        if !(value == expected)
+          throw TimeoutError("timeout on #{name}: #{current}")
+        if !params.matchProc(current)
           one()
           return
-        next((@ok(true, "hasCss: #{value}")))
+        next((@ok(true, "#{!params.name}: #{current}")))
       , (e) =>
-        console.log('hasCss', 'e', e)
+        if @isTimeout()
+          throw TimeoutError("timeout on #{!params.name}")
+        console.log(!params.name, 'e', e)
         one()
       )
     one()
@@ -206,6 +190,9 @@ setChainMethod(KamakuraElement, [{
 },{
   names: ['css', 'has']
   method: 'hasCss'
+},{
+  names: ['neko', 'has']
+  method: 'hasAttr'
 }])
 
 module.exports = {

@@ -80,6 +80,18 @@ describe("Kaminari", ->
       )
     )
   )
+
+  describe("hasAttr()", ->
+    it('should wait result', (done) ->
+      km.run((next) =>
+        km.goto("http://#{address.address}:#{address.port}?js=hasAttr.js")
+        km.find("button").click()
+        km.find(".result_text").hasAttr("name", "name_value")
+        km.find(".result_text").neko.has("name", "name_value")
+        done()
+      )
+    )
+  )
   
   after(->
     km.destroy()
