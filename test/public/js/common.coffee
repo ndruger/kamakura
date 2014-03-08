@@ -7,6 +7,8 @@ $(document).ready(->
       $(document.body).append($('<div>').attr(
         'class': 'result_text'
         'name': 'name_value'
+      ).css(
+        'display': 'inline-block'
       ))
       Q.delay(DELAY)
       

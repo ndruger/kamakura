@@ -95,7 +95,6 @@ class KamakuraElement
     @_orig = webdriverElement
     @_km = km
     @_chain = []
-    
   ok: (result, msg) ->
     @_km.ok(result, msg)
   containsText: (expected, opt_next) ->

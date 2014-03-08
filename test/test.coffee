@@ -15,7 +15,7 @@ describe("Kaminari", ->
   describe("find()", ->
     it('should wait and find result element', (done) ->
       km.run((next) =>
-        km.goto("http://#{address.address}:#{address.port}?js=find.js")
+        km.goto("http://#{address.address}:#{address.port}?js=common.js")
         km.find("button").click()
         assert.ok(km.find(".result_text"))
         done()
@@ -26,7 +26,7 @@ describe("Kaminari", ->
   describe("containsText()", ->
     it('should wait result', (done) ->
       km.run((next) =>
-        km.goto("http://#{address.address}:#{address.port}?js=containsText.js")
+        km.goto("http://#{address.address}:#{address.port}?js=common.js")
         km.find("button").click()
         km.find(".result_text").containsText("pushed")
         km.find(".result_text").text.contains("push")
@@ -60,7 +60,7 @@ describe("Kaminari", ->
   describe("hasHtml()", ->
     it('should wait result', (done) ->
       km.run((next) =>
-        km.goto("http://#{address.address}:#{address.port}?js=containsHtml.js")
+        km.goto("http://#{address.address}:#{address.port}?js=common.js")
         km.find("button").click()
         km.find(".result_text").containsHtml("pushed")
         km.find(".result_text").html.contains("pushed")
@@ -72,7 +72,7 @@ describe("Kaminari", ->
   describe("hasCss()", ->
     it('should wait result', (done) ->
       km.run((next) =>
-        km.goto("http://#{address.address}:#{address.port}?js=hasCss.js")
+        km.goto("http://#{address.address}:#{address.port}?js=common.js")
         km.find("button").click()
         km.find(".result_text").hasCss("display", "inline-block")
         km.find(".result_text").css.has("display", "inline-block")
@@ -84,7 +84,7 @@ describe("Kaminari", ->
   describe("hasAttr()", ->
     it('should wait result', (done) ->
       km.run((next) =>
-        km.goto("http://#{address.address}:#{address.port}?js=hasAttr.js")
+        km.goto("http://#{address.address}:#{address.port}?js=common.js")
         km.find("button").click()
         km.find(".result_text").hasAttr("name", "name_value")
         km.find(".result_text").attr.has("name", "name_value")
