@@ -99,14 +99,54 @@ class KamakuraElement
     @_km = km
     @_chain = []
   ok: (result, msg) ->
+#    LOG(result, msg)
     @_km.ok(result, msg)
+  _getX: (params) ->
+    next = params.next || @_km.next
+    @startTimer()
+    one = () => 
+      params.proc().then((v) => 
+#        LOG("#{params.name}: v: ", v)
+        if v == ''  # TODO: Is this a bug of selenium-webdriver?
+          one()
+          return
+        next(v)
+      , (e) =>
+        if @isTimeout()
+          LOG(!params.name, "e", e)
+          throw TimeoutError("timeout on #{!params.name}")
+        one()
+      )
+    one()
+    Fiber.yield()
+  getCss: (property, opt_next) ->
+    @_getX(
+      name: 'getCss',
+      proc: =>
+        @_orig.getCssValue(property)
+      next: opt_next  
+    )
+  getHtml: (opt_next) ->
+    @_getX(
+      name: 'getHtml',
+      proc: =>
+        @_orig.getInnerHtml()
+      next: opt_next  
+    )
+  getAttribute: (property, opt_next) ->
+    @_getX(
+      name: 'getAttribute',
+      proc: =>
+        @_orig.getAttribute(property)
+      next: opt_next  
+    )
   shouldContainText: (expected, opt_next) ->
     @_shouldX(
       name: "shouldContainText",
       proc: =>
         @_orig.getText()
       matchProc: (current) =>
-        expected.match(current)
+        current.match(expected)
       next: opt_next
     )
   shouldBeX: (name, method, opt_next) ->
@@ -151,7 +191,7 @@ class KamakuraElement
     @startTimer()
     one = () => 
       params.proc().then((current) => 
-        #LOG("#{name}: result: ", result)
+#        LOG("#{params.name}: current: ", current)
         if @isTimeout()
           throw TimeoutError("timeout on #{params.name}: #{current}")
         if !params.matchProc(current)
@@ -161,7 +201,7 @@ class KamakuraElement
       , (e) =>
         if @isTimeout()
           throw TimeoutError("timeout on #{!params.name}")
-#        console.log(!params.name, "e", e)
+#        LOG(!params.name, "e", e)
         one()
       )
     one()
@@ -173,6 +213,21 @@ _.each([
 ], (name) ->
   KamakuraElement.prototype[name] = (args) ->
     @_km[name].apply(@_km, arguments)
+)
+
+_.each([
+  'getText',
+  'isEnabled',
+  'isSelected',
+  'isDisplayed'
+], (name) ->
+  KamakuraElement.prototype[name] = (opt_next) ->
+    @_getX(
+      name: name,
+      proc: =>
+        @_orig[name]()
+      next: opt_next  
+    )
 )
 
 _.each([
@@ -196,10 +251,11 @@ setChainMethod(KamakuraElement, [{
   method: "shouldHaveCss"
 },{
   names: ["attr", "should", "have"]
-  method: "shouldHasAttr"
+  method: "shouldHaveAttr"
 }])
 
 module.exports = {
   create: (params) ->
     new Kamakura(params)
+  capabilities: Kamakura.Capabilities
 }
