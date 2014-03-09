@@ -127,12 +127,15 @@ describe("Kaminari", ->
     )
   )
 
-  describe("forceDisplayInlineBlockMode()", ->
-    it("should wait result", (done) ->
+  describe("forceDisplayInlineBlockMode() / forceDisplayBlockMode()", ->
+    it("should change style", (done) ->
       km.run((next) =>
         km.goto("#{origin}?js=forceDisplayInlineBlockMode.js")
         km.find("button").click()
         km.forceDisplayInlineBlockMode('.result_text');
+        km.find(".result_text").shouldHaveCss("display", "inline-block")
+        km.forceDisplayBlockMode('.result_text');
+        km.find(".result_text").shouldHaveCss("display", "block")
         km.find(".result_text").shouldContainText("pushed")
         done()
       )

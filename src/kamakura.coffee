@@ -90,10 +90,14 @@ class Kamakura
   findAll: (css, opt_next) ->
     new KamakuraElements(css, @)
   setTimeoutValue: (@timeout) ->
-  forceDisplayInlineBlockMode: (css) ->
+  forceDisplayInlineBlockMode: (selector) ->
+    @_forceDisplayStyleMode(selector, 'inline-block')
+  forceDisplayBlockMode: (selector) ->
+    @_forceDisplayStyleMode(selector, 'block')
+  _forceDisplayStyleMode: (selector, value) ->
     style = "" +
-      "  #{css} {" +
-      "    display: inline-block!important;" +
+      "  #{selector} {" +
+      "    display: #{value}!important;" +
       "  }" +
       ""
     script = ";" +
