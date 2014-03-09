@@ -3,6 +3,7 @@ webdriver = require("selenium-webdriver")
 _ = require("lodash")
 
 LOG = console.log.bind(console);
+DP = console.log.bind(console);
 
 run = (f) ->
   fiber = Fiber(() =>
@@ -35,7 +36,9 @@ setChainMethod = (cls, methods) ->
         )
         if found
           @_chain = []
-          return this[found.method].apply(this, arguments)
+          ret = this[found.method].apply(this, arguments)
+          @_not = false
+          return ret
         this
       if name == method.names[method.names.length - 1]
         cls.prototype[name] = f
@@ -116,6 +119,9 @@ class Kamakura
       , t)
     one()
     Fiber.yield()
+  # takeScreenshot: () ->
+    # don't work
+    # @driver.takeScreenshot()
 
 Kamakura.Capabilities = webdriver.Capabilities
 
@@ -179,6 +185,7 @@ class KamakuraElement extends KamakuraBaseElement
   constructor: (webdriverElement, km) ->
     # webdriver.WebElement
     @_orig = webdriverElement
+    @_not = false
     @_km = km
     @_chain = []
   _getX: (params) ->
@@ -226,7 +233,7 @@ class KamakuraElement extends KamakuraBaseElement
       proc: =>
         @_orig.getText()
       matchProc: (current) =>
-        current.match(expected)
+        current.indexOf(expected) != -1
       next: opt_next
     )
   shouldBeX: (name, method, opt_next) ->
@@ -250,7 +257,7 @@ class KamakuraElement extends KamakuraBaseElement
       proc: =>
         @_orig.getInnerHtml()
       matchProc: (current) =>
-        current.match(expected)
+        current.indexOf(expected) != -1
       next: opt_next
     )
   shouldHaveCss: (css, expected, opt_next) ->
@@ -274,7 +281,10 @@ class KamakuraElement extends KamakuraBaseElement
 #        LOG("#{params.name}: current: ", current)
         if @isTimeout(t)
           throw TimeoutError("timeout on #{params.name}: #{current}")
-        if !params.matchProc(current)
+        res = params.matchProc(current)
+        if @_not
+          res = !res
+        if !res
           one()
           return
         next((@ok(true, "#{!params.name}: #{current}")))
@@ -287,6 +297,11 @@ class KamakuraElement extends KamakuraBaseElement
     one()
     Fiber.yield()
 
+KamakuraElement.prototype.__defineGetter__('not', ->
+  @_not = true
+  @
+)
+
 _.each([
   "startTimer",
   "isTimeout"
@@ -295,6 +310,7 @@ _.each([
     @_km[name].apply(@_km, arguments)
 )
 
+# getter
 _.each([
   'getText',
   'isEnabled',
@@ -310,6 +326,7 @@ _.each([
     )
 )
 
+# action
 _.each([
   "click",
   "sendKeys",
@@ -320,6 +337,7 @@ _.each([
     @_orig[name].apply(@_orig, arguments)
 )
 
+# chain methods
 setChainMethod(KamakuraElement, [{
   names: ["text", "should", "contain"]
   method: "shouldContainText"
@@ -334,6 +352,12 @@ setChainMethod(KamakuraElement, [{
   method: "shouldHaveAttr"
 }])
 
+# add shouldNotX
+# for e of KamakuraElement.prototype
+  # if e.indexOf('should') == -1
+    # return
+  
+  
 module.exports = {
   create: (params) ->
     new Kamakura(params)
