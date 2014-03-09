@@ -12,7 +12,7 @@ km = kamakura.create(
 
 describe("Kaminari", ->
   this.timeout(10000)
-  km.setTimeoutValue(10000)
+  km.setTimeoutValue(2000)
 
   describe("find()", ->
     it("should wait and find result element", (done) ->
@@ -122,6 +122,18 @@ describe("Kaminari", ->
         km.find(".result_text").shouldHaveAttr("name", "name_value")
         km.find(".result_text").attr.should.have("name", "name_value")
         assert.equal(km.find(".result_text").getAttribute("name"), "name_value")
+        done()
+      )
+    )
+  )
+
+  describe("forceDisplayInlineBlockMode()", ->
+    it("should wait result", (done) ->
+      km.run((next) =>
+        km.goto("#{origin}?js=forceDisplayInlineBlockMode.js")
+        km.find("button").click()
+        km.forceDisplayInlineBlockMode('.result_text');
+        km.find(".result_text").shouldContainText("pushed")
         done()
       )
     )

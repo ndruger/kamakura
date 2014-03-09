@@ -90,6 +90,28 @@ class Kamakura
   findAll: (css, opt_next) ->
     new KamakuraElements(css, @)
   setTimeoutValue: (@timeout) ->
+  forceDisplayInlineBlockMode: (css) ->
+    style = "" +
+      "  #{css} {" +
+      "    display: inline-block!important;" +
+      "  }" +
+      ""
+    script = ";" +
+      "var el = document.createElement('style');" +
+      "var style = '#{style}';" +
+      "el.textContent = style;" +
+      "document.head.appendChild(el);"
+    @driver.executeScript(script)
+  pause: (opt_next) ->
+    next = opt_next || @next
+    t = t || 10000;
+    
+    one = () => 
+      setTimeout(() ->
+        next()
+      , t)
+    one()
+    Fiber.yield()
 
 Kamakura.Capabilities = webdriver.Capabilities
 
