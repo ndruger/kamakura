@@ -25,6 +25,20 @@ describe("Kaminari", ->
     )
   )
 
+  describe("findAll()", ->
+    it("should find result elements", (done) ->
+      km.run((next) =>
+        km.goto("#{origin}?js=common.js")
+        km.find("button").click()
+        km.find("button").click()
+        assert.equal(km.findAll(".result_text").getCount(), 0)  # it doesn't wait
+        km.findAll(".result_text").shouldCountEqual(2);
+        assert.equal(km.findAll(".result_text").getCount(), 2)
+        done()
+      )
+    )
+  )
+
   describe("shouldBeEnabled()", ->
     it("should wait result", (done) ->
       km.run((next) =>

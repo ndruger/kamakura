@@ -47,23 +47,23 @@ setChainMethod = (cls, methods) ->
 class Kamakura
   constructor: (opt_params) ->
     capabilities = (opt_params && opt_params.capabilities) || Kamakura.Capabilities.chrome()
-    @_driver = new webdriver.Builder().
+    @driver = new webdriver.Builder().
       withCapabilities(capabilities).
       build()
     @_okProc = (opt_params && opt_params.okProc)
     @timeout = 3000
   destroy: ->
-    @_driver.quit()
+    @driver.quit()
   startTimer: ->
-    @startTime = Date.now()
-  isTimeout: ->
-    Date.now() - @startTime > @timeout
+    Date.now()
+  isTimeout: (t) ->
+    Date.now() - t > @timeout
   ok: (result, msg) ->
     if @_okProc
       @_okProc(result, msg)
     result
   goto: (url) ->
-    @_driver.get(url)
+    @driver.get(url)
   run: (f) ->
     fiber = Fiber(() =>
       next = (x) => fiber.run(x)
@@ -74,36 +74,90 @@ class Kamakura
   find: (css, opt_next) ->
     next = opt_next || @next
     
-    @startTimer()
+    t = @startTimer()
     one = () => 
-      @_driver.findElement(webdriver.By.css(css)).then((el) =>
+      @driver.findElement(webdriver.By.css(css)).then((el) =>
 #        LOG("Find: Found: #{css}: ", el);
         next(new KamakuraElement(el, @))
       , (e) =>
-        if @isTimeout()
-          LOG("Find: Not Found: #{css}");
+        if @isTimeout(t)
+#          LOG("Find: Not Found: #{css}");
           throw TimeoutError("timeout on find: #{css}")
         one()
       )
     one()
     Fiber.yield()
+  findAll: (css, opt_next) ->
+    new KamakuraElements(css, @)
   setTimeoutValue: (@timeout) ->
 
 Kamakura.Capabilities = webdriver.Capabilities
 
 
-class KamakuraElement
+class KamakuraBaseElement
+  ok: (result, msg) ->
+#    LOG(result, msg)
+    @_km.ok(result, msg)
+  startTimer: ->
+    @_km.startTimer()
+  isTimeout: (t) ->
+    @_km.isTimeout(t)
+
+class KamakuraElements extends KamakuraBaseElement
+  constructor: (css, km) ->
+    @_css = css
+    @_km = km
+  findOrigs: (opt_next) ->
+    next = opt_next || @_km.next
+    
+    t = @startTimer()
+    one = () => 
+      @_km.driver.findElements(webdriver.By.css(@_css)).then((els) =>
+#        LOG("Find: Found: #{@_css}: ", els);
+        next(els)
+      , (e) =>
+        if @isTimeout(t)
+#          LOG("Find: Not Found: #{css}");
+          throw TimeoutError("timeout on currentFindAll: #{@_css}")
+        one()
+      )
+    one()
+    Fiber.yield()
+  getCount: (opt_next) ->
+    @findOrigs().length 
+  shouldCountEqual: (expected, opt_next) ->
+    @_shouldX(
+      name: 'shouldCountEqual',
+      matchProc: (current) =>
+        current == expected
+      next: opt_next
+    )
+  _shouldX: (params) ->
+    next = params.next || @_km.next
+    t = @startTimer()
+    one = () => 
+      run((aNext) =>
+        current = @findOrigs(aNext).length
+        if @isTimeout(t)
+          throw TimeoutError("timeout on #{params.name}: #{current}")
+        if !params.matchProc(current)
+          one()
+          return
+        next((@ok(true, "#{params.name}: #{current}")))
+      )
+    one()
+    Fiber.yield()
+    
+
+class KamakuraElement extends KamakuraBaseElement
   constructor: (webdriverElement, km) ->
     # webdriver.WebElement
     @_orig = webdriverElement
     @_km = km
     @_chain = []
-  ok: (result, msg) ->
-#    LOG(result, msg)
-    @_km.ok(result, msg)
   _getX: (params) ->
     next = params.next || @_km.next
-    @startTimer()
+    t = @startTimer()
     one = () => 
       params.proc().then((v) => 
 #        LOG("#{params.name}: v: ", v)
@@ -112,7 +166,7 @@ class KamakuraElement
           return
         next(v)
       , (e) =>
-        if @isTimeout()
+        if @isTimeout(t)
           LOG(!params.name, "e", e)
           throw TimeoutError("timeout on #{!params.name}")
         one()
@@ -188,18 +242,18 @@ class KamakuraElement
     )
   _shouldX: (params) ->
     next = params.next || @_km.next
-    @startTimer()
+    t = @startTimer()
     one = () => 
       params.proc().then((current) => 
 #        LOG("#{params.name}: current: ", current)
-        if @isTimeout()
+        if @isTimeout(t)
           throw TimeoutError("timeout on #{params.name}: #{current}")
         if !params.matchProc(current)
           one()
           return
         next((@ok(true, "#{!params.name}: #{current}")))
       , (e) =>
-        if @isTimeout()
+        if @isTimeout(t)
           throw TimeoutError("timeout on #{!params.name}")
 #        LOG(!params.name, "e", e)
         one()
