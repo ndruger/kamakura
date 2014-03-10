@@ -284,6 +284,7 @@ class KamakuraElement extends KamakuraBaseElement
         res = params.matchProc(current)
         if @_not
           res = !res
+          @_not = false
         if !res
           one()
           return
@@ -353,9 +354,15 @@ setChainMethod(KamakuraElement, [{
 }])
 
 # add shouldNotX
-# for e of KamakuraElement.prototype
-  # if e.indexOf('should') == -1
-    # return
+for orig of KamakuraElement.prototype
+  if orig.indexOf('should') == -1
+    return
+  name = orig.replace('should', 'shouldNot')
+  KamakuraElement.prototype.name = (args) ->
+    @_not = true
+    ret = @[orig].apply(@, arguments)
+    @_not = false
+    return  ret
   
   
 module.exports = {
