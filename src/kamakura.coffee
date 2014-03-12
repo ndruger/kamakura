@@ -354,16 +354,17 @@ setChainMethod(KamakuraElement, [{
 }])
 
 # add shouldNotX
-for orig of KamakuraElement.prototype
-  if orig.indexOf('should') == -1
-    return
-  name = orig.replace('should', 'shouldNot')
-  KamakuraElement.prototype.name = (args) ->
-    @_not = true
-    ret = @[orig].apply(@, arguments)
-    @_not = false
-    return  ret
-  
+for origName of KamakuraElement.prototype
+  ((orig) ->
+    if !orig.match(/^should(.)+/)
+      return
+    name = orig.replace('should', 'shouldNot')
+    KamakuraElement.prototype[name] = (args) ->
+      @_not = true
+      ret = @[orig].apply(@, arguments)
+      @_not = false
+      ret
+  )(origName)
   
 module.exports = {
   create: (params) ->

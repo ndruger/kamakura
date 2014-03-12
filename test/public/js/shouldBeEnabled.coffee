@@ -8,7 +8,9 @@ $(document).ready(->
 
   $(document.body).append($('<button>').attr(
     'class': 'disabled_button'
-  ).prop('disabled', true))
+  )
+    .text('disabled_button')
+    .prop('disabled', true))
 
   $('button').on('click', ->
     Q.delay(DELAY).then(->
