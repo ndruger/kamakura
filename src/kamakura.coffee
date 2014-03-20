@@ -351,6 +351,15 @@ setChainMethod(KamakuraElement, [{
 },{
   names: ["should", "have", "attr"]
   method: "shouldHaveAttr"
+},{
+  names: ["should", "be", "enabled"]
+  method: "shouldBeEnabled"
+},{
+  names: ["should", "be", "selected"]
+  method: "shouldBeSelected"
+},{
+  names: ["should", "be", "displayed"]
+  method: "shouldBeDisplayed"
 }])
 
 # add shouldNotX
