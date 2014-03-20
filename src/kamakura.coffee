@@ -340,16 +340,16 @@ _.each([
 
 # chain methods
 setChainMethod(KamakuraElement, [{
-  names: ["text", "should", "contain"]
+  names: ["should", "contain", "text"]
   method: "shouldContainText"
 },{
-  names: ["html", "should", "contain"]
+  names: ["should", "contain", "html"]
   method: "shouldContainHtml"
 },{
-  names: ["css", "should", "have"]
+  names: ["should", "have", "css"]
   method: "shouldHaveCss"
 },{
-  names: ["attr", "should", "have"]
+  names: ["should", "have", "attr"]
   method: "shouldHaveAttr"
 }])
 

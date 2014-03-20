@@ -39,6 +39,7 @@ describe("Kaminari", ->
     )
   )
 
+
   describe("shouldBeEnabled()", ->
     it("should wait result", (done) ->
       km.run((next) =>
@@ -85,8 +86,8 @@ describe("Kaminari", ->
         km.find("button").click()
         km.find(".result_text").shouldContainText("push")
         km.find(".result_text").shouldNotContainText("push?")
-        km.find(".result_text").text.should.contain("push")
-        km.find(".result_text").text.should.not.contain("push?")
+        km.find(".result_text").should.contain.text("push")
+        km.find(".result_text").should.not.contain.text("push?")
         assert.equal(km.find(".result_text").getText(), "pushed")
         done()
       )
@@ -100,8 +101,8 @@ describe("Kaminari", ->
         km.find("button").click()
         km.find(".result_text").shouldContainHtml("push")
         km.find(".result_text").shouldNotContainHtml("push?")
-        km.find(".result_text").html.should.contain("push")
-        km.find(".result_text").html.should.not.contain("push?")
+        km.find(".result_text").should.contain.html("push")
+        km.find(".result_text").should.not.contain.html("push?")
         assert.equal(km.find(".result_text").getHtml(), "pushed")
         done()
       )
@@ -115,8 +116,8 @@ describe("Kaminari", ->
         km.find("button").click()
         km.find(".result_text").shouldHaveCss("display", "inline-block")
         km.find(".result_text").shouldNotHaveCss("display", "block")
-        km.find(".result_text").css.should.have("display", "inline-block")
-        km.find(".result_text").css.should.not.have("display", "block")
+        km.find(".result_text").should.have.css("display", "inline-block")
+        km.find(".result_text").should.not.have.css("display", "block")
         assert.equal(km.find(".result_text").getCss("display"), "inline-block")
         done()
       )
@@ -130,8 +131,8 @@ describe("Kaminari", ->
         km.find("button").click()
         km.find(".result_text").shouldHaveAttr("name", "name_value")
         km.find(".result_text").shouldNotHaveAttr("name", "name_value?")
-        km.find(".result_text").attr.should.have("name", "name_value")
-        km.find(".result_text").attr.should.not.have("name", "name_value?")
+        km.find(".result_text").should.have.attr("name", "name_value")
+        km.find(".result_text").should.not.have.attr("name", "name_value?")
         assert.equal(km.find(".result_text").getAttribute("name"), "name_value")
         done()
       )
