@@ -5,6 +5,7 @@ _ = require("lodash")
 LOG = console.log.bind(console);
 DP = console.log.bind(console);
 
+
 run = (f) ->
   fiber = Fiber(() =>
     next = (x) => fiber.run(x)
@@ -75,21 +76,7 @@ class Kamakura
     )
     fiber.run()
   find: (css, opt_next) ->
-    next = opt_next || @next
-    
-    t = @startTimer()
-    one = () => 
-      @driver.findElement(webdriver.By.css(css)).then((el) =>
-#        LOG("Find: Found: #{css}: ", el);
-        next(new KamakuraElement(el, @))
-      , (e) =>
-        if @isTimeout(t)
-#          LOG("Find: Not Found: #{css}");
-          throw TimeoutError("timeout on find: #{css}")
-        one()
-      )
-    one()
-    Fiber.yield()
+    return new KamakuraElement(css, @)
   findAll: (css, opt_next) ->
     new KamakuraElements(css, @)
   setTimeoutValue: (@timeout) ->
@@ -97,6 +84,12 @@ class Kamakura
     @_forceDisplayStyleMode(selector, 'inline-block')
   forceDisplayBlockMode: (selector) ->
     @_forceDisplayStyleMode(selector, 'block')
+  test: (selector, value) ->
+    script = "return 'neko'"
+    @driver.executeScript(script)
+      .then((a) =>
+        DP('neko', a)
+      )
   _forceDisplayStyleMode: (selector, value) ->
     style = "" +
       "  #{selector} {" +
@@ -143,7 +136,7 @@ class KamakuraElements extends KamakuraBaseElement
     next = opt_next || @_km.next
     
     t = @startTimer()
-    one = () => 
+    one = () =>
       @_km.driver.findElements(webdriver.By.css(@_css)).then((els) =>
 #        LOG("Find: Found: #{@_css}: ", els);
         next(els)
@@ -182,9 +175,9 @@ class KamakuraElements extends KamakuraBaseElement
     
 
 class KamakuraElement extends KamakuraBaseElement
-  constructor: (webdriverElement, km) ->
+  constructor: (css, km) ->
     # webdriver.WebElement
-    @_orig = webdriverElement
+    @_css = css
     @_not = false
     @_km = km
     @_chain = []
@@ -206,32 +199,50 @@ class KamakuraElement extends KamakuraBaseElement
       )
     one()
     Fiber.yield()
+  findOrig: (opt_next) ->
+    next = opt_next || @_km.next
+    
+    t = @startTimer()
+    one = () =>
+      run((aNext) =>
+        @_km.driver.findElement(webdriver.By.css(@_css)).then((el) =>
+#          LOG("Find: Found: #{@_css}: ", el);
+          next(el)
+        , (e) =>
+          if @isTimeout(t)
+  #          LOG("Find: Not Found: #{css}");
+            throw TimeoutError("timeout on findOrig: #{@_css}")
+          one()
+        )
+      )
+    one()
+    Fiber.yield()
   getCss: (property, opt_next) ->
     @_getX(
       name: 'getCss',
-      proc: =>
-        @_orig.getCssValue(property)
+      proc: (aNext) =>
+        @findOrig(aNext).getCssValue(property)
       next: opt_next  
     )
   getHtml: (opt_next) ->
     @_getX(
       name: 'getHtml',
-      proc: =>
-        @_orig.getInnerHtml()
+      proc: (aNext) =>
+        @findOrig(aNext).getInnerHtml()
       next: opt_next  
     )
   getAttribute: (property, opt_next) ->
     @_getX(
       name: 'getAttribute',
-      proc: =>
-        @_orig.getAttribute(property)
+      proc: (aNext) =>
+        @findOrig(aNext).getAttribute(property)
       next: opt_next  
     )
   shouldContainText: (expected, opt_next) ->
     @_shouldX(
       name: "shouldContainText",
-      proc: =>
-        @_orig.getText()
+      proc: (aNext) =>
+        @findOrig(aNext).getText()
       matchProc: (current) =>
         current.indexOf(expected) != -1
       next: opt_next
@@ -239,8 +250,8 @@ class KamakuraElement extends KamakuraBaseElement
   shouldBeX: (name, method, opt_next) ->
     @_shouldX(
       name: name,
-      proc: =>
-        @_orig[method]()
+      proc: (aNext) =>
+        @findOrig(aNext)[method]()
       matchProc: (current) =>
         current
       next: opt_next
@@ -254,8 +265,8 @@ class KamakuraElement extends KamakuraBaseElement
   shouldContainHtml: (expected, opt_next) ->
     @_shouldX(
       name: "shouldContainHtml",
-      proc: =>
-        @_orig.getInnerHtml()
+      proc: (aNext) =>
+        @findOrig(aNext).getInnerHtml()
       matchProc: (current) =>
         current.indexOf(expected) != -1
       next: opt_next
@@ -267,8 +278,8 @@ class KamakuraElement extends KamakuraBaseElement
   _shouldHaveX: (name, method, property, expected, opt_next) ->
     @_shouldX(
       name: name,
-      proc: =>
-        @_orig[method](property)
+      proc: (aNext) =>
+        @findOrig(aNext)[method](property)
       matchProc: (current) =>
         current == expected
       next: opt_next
@@ -277,23 +288,25 @@ class KamakuraElement extends KamakuraBaseElement
     next = params.next || @_km.next
     t = @startTimer()
     one = () => 
-      params.proc().then((current) => 
-#        LOG("#{params.name}: current: ", current)
-        if @isTimeout(t)
-          throw TimeoutError("timeout on #{params.name}: #{current}")
-        res = params.matchProc(current)
-        if @_not
-          res = !res
-          @_not = false
-        if !res
+      run((aNext) =>
+        params.proc(aNext).then((current) => 
+          LOG("#{params.name}: current: ", current)
+          if @isTimeout(t)
+            throw TimeoutError("timeout on #{params.name}: #{current}")
+          res = params.matchProc(current)
+          if @_not
+            res = !res
+            @_not = false
+          if !res
+            one()
+            return
+          next((@ok(true, "#{!params.name}: #{current}")))
+        , (e) =>
+          if @isTimeout(t)
+            throw TimeoutError("timeout on #{!params.name}")
+  #        LOG(!params.name, "e", e)
           one()
-          return
-        next((@ok(true, "#{!params.name}: #{current}")))
-      , (e) =>
-        if @isTimeout(t)
-          throw TimeoutError("timeout on #{!params.name}")
-#        LOG(!params.name, "e", e)
-        one()
+        )
       )
     one()
     Fiber.yield()
@@ -322,7 +335,7 @@ _.each([
     @_getX(
       name: name,
       proc: =>
-        @_orig[name]()
+        @findOrig()[name]()
       next: opt_next  
     )
 )
@@ -335,7 +348,8 @@ _.each([
   "clear",
 ], (name) ->
   KamakuraElement.prototype[name] = (args) ->
-    @_orig[name].apply(@_orig, arguments)
+    orig = @findOrig()
+    orig[name].apply(orig, arguments)
 )
 
 # chain methods

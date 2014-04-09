@@ -5,6 +5,8 @@ origin = "http://#{address.address}:#{address.port}"
 
 assert = require("chai").assert
 
+DP = console.log.bind(console)
+
 km = kamakura.create(
   okProc: assert.ok
   capabilities: kamakura.capabilities.chrome()
@@ -46,10 +48,10 @@ describe("Kaminari", ->
         km.goto("#{origin}?js=shouldBeEnabled.js")
         km.find("button").click()
         km.find(".result_button").shouldBeEnabled()
-        km.find(".result_button").should.be.enabled()
-        km.find(".disabled_button").shouldNotBeEnabled()
-        km.find(".disabled_button").should.not.be.enabled()
-        assert.equal(km.find(".result_button").isEnabled(), true)
+#        km.find(".result_button").should.be.enabled()
+#        km.find(".disabled_button").shouldNotBeEnabled()
+#        km.find(".disabled_button").should.not.be.enabled()
+#        assert.equal(km.find(".result_button").isEnabled(), true)
         done()
       )
     )
@@ -159,6 +161,15 @@ describe("Kaminari", ->
       )
     )
   )
+
+  # describe("test", ->
+    # it("should change style", (done) ->
+      # km.run((next) =>
+        # km.goto("#{origin}?js=forceDisplayInlineBlockMode.js")
+        # DP(km.test())
+      # )
+    # )
+  # )
   
   after(->
     km.destroy()
