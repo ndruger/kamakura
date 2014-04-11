@@ -9,6 +9,8 @@ module.exports = (grunt) ->
         tasks: 'coffee:test'
     coffee:
       src:
+        options:
+          sourceMap: true
         files: [
           expand: true
           bare: true
@@ -18,6 +20,8 @@ module.exports = (grunt) ->
           ext: '.js'
         ]
       test:
+        options:
+          sourceMap: true
         files: [
           expand: true
           bare: true

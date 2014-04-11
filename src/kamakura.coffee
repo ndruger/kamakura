@@ -1,10 +1,10 @@
+require('source-map-support').install()
 Fiber = require("fibers")
 webdriver = require("selenium-webdriver")
 _ = require("lodash")
 
 LOG = console.log.bind(console);
 DP = console.log.bind(console);
-
 
 run = (f) ->
   fiber = Fiber(() =>
@@ -17,7 +17,7 @@ TimeoutError = (msg) ->
   err = Error.call(this, msg)
   err.name = "TimeoutError"
   err
-      
+
 setChainMethod = (cls, methods) ->
   maxLen = _.map(methods, (m) ->
     m.names.length
@@ -290,7 +290,7 @@ class KamakuraElement extends KamakuraBaseElement
     one = () => 
       run((aNext) =>
         params.proc(aNext).then((current) => 
-          LOG("#{params.name}: current: ", current)
+#          LOG("#{params.name}: current: ", current)
           if @isTimeout(t)
             throw TimeoutError("timeout on #{params.name}: #{current}")
           res = params.matchProc(current)
